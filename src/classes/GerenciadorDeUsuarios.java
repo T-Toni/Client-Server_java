@@ -281,7 +281,7 @@ public class GerenciadorDeUsuarios {
 	public String cadastraCategoriaAviso(String string_json) {
 	    String arquivo_categorias = "categorias.json";
 	    
-	    // Converte a string para o objeto Requisicao
+	    // Converte a string JSON para um objeto Requisicao
 	    Requisicao reqCat = gson.fromJson(string_json, Requisicao.class);
 	    
 	    // Valida o token (supondo que o token deva ter 7 caracteres)
@@ -289,47 +289,57 @@ public class GerenciadorDeUsuarios {
 	        return new Mensagem("207", "Invalid token", null).Padroniza();
 	    }
 	    
-	    // Cria a classe categoria
-	    CategoriaDeAvisos novaCategoria = reqCat.getCategories();
-	    
-
-	    // Valida os campos obrigatórios da categoria
-	    if (novaCategoria.name == null) {
-	        return new Mensagem("201", "Missing fields", null).Padroniza();
+	    // Obtém o vetor de categorias enviado na requisição
+	    ArrayList<CategoriaDeAvisos> novasCategorias = reqCat.getCategories();
+	    if (novasCategorias == null || novasCategorias.isEmpty()) {
+	        return new Mensagem("208", "Nenhuma categoria informada", null).Padroniza();
 	    }
 	    
-	    // Atualiza a lista de categorias lendo o arquivo Categorias.json
+	    // Valida os campos obrigatórios de cada categoria (neste exemplo, somente 'name' é obrigatório)
+	    for (CategoriaDeAvisos cat : novasCategorias) {
+	        if (cat.name == null || cat.name.trim().isEmpty()) {
+	            return new Mensagem("201", "Missing fields in one or more categories", null).Padroniza();
+	        }
+	    }
+	    
+	    // Lê o arquivo "categorias.json" para obter a lista de categorias já cadastradas
 	    ArrayList<CategoriaDeAvisos> listaCategorias;
 	    try (FileReader reader = new FileReader(arquivo_categorias)) {
-	        Type listType = new TypeToken<ArrayList<CategoriaDeAvisos>>(){}.getType();
+	        java.lang.reflect.Type listType = new com.google.gson.reflect.TypeToken<ArrayList<CategoriaDeAvisos>>(){}.getType();
 	        listaCategorias = gson.fromJson(reader, listType);
 	        if (listaCategorias == null) {
 	            listaCategorias = new ArrayList<>();
 	        }
 	    } catch (IOException e) {
 	        e.printStackTrace();
-	        return new Mensagem("203", "Unknown Error", null).Padroniza();
+	        // Caso o arquivo não exista ou ocorra erro na leitura, inicia uma nova lista
+	        listaCategorias = new ArrayList<>();
 	    }
-
-	    // Determina o próximo id sequencial
+	    
+	    // Determina o próximo ID sequencial com base nos IDs existentes
 	    int novoId = 1;
 	    if (!listaCategorias.isEmpty()) {
-	        // Encontra o maior id existente e adiciona 1 para o novo id
 	        int maiorId = listaCategorias.stream()
-	                                     .mapToInt(cat -> Integer.parseInt(cat.id))
-	                                     .max()
-	                                     .orElse(0);
+	            .mapToInt(cat -> {
+	                try {
+	                    return Integer.parseInt(cat.id);
+	                } catch (NumberFormatException ex) {
+	                    return 0;
+	                }
+	            })
+	            .max()
+	            .orElse(0);
 	        novoId = maiorId + 1;
 	    }
-
-
-	    // Define o id da nova categoria
-	    novaCategoria.id = String.valueOf(novoId);
 	    
-	    // Adiciona a nova categoria à lista
-	    listaCategorias.add(novaCategoria);
+	    // Para cada nova categoria, atribui um novo ID e adiciona à lista
+	    for (CategoriaDeAvisos cat : novasCategorias) {
+	        cat.id = String.valueOf(novoId);
+	        novoId++;
+	        listaCategorias.add(cat);
+	    }
 	    
-	    // Reescreve o arquivo Categorias.json com a lista atualizada
+	    // Reescreve o arquivo "categorias.json" com a lista atualizada
 	    try (FileWriter writer = new FileWriter(arquivo_categorias)) {
 	        gson.toJson(listaCategorias, writer);
 	        writer.flush();
@@ -338,8 +348,9 @@ public class GerenciadorDeUsuarios {
 	        return new Mensagem("203", "Unknown Error", null).Padroniza();
 	    }
 	    
-	    return new Mensagem("200", "Successful category creation", novaCategoria.id).Padroniza();
+	    return new Mensagem("200", "Successful category creation", "Categorias adicionadas: " + novasCategorias.size()).Padroniza();
 	}
+
 
 	
 	public String excluiCategoria(String string_json) {
@@ -347,8 +358,6 @@ public class GerenciadorDeUsuarios {
 	    
 	    // Converte a string para o objeto Requisicao
 	    Requisicao reqCat = gson.fromJson(string_json, Requisicao.class);
-	    
-	    System.out.println(reqCat.getIDs());
 	    
 	    // Valida o token (supondo que o token deva ter 7 caracteres)
 	    if (reqCat.getToken() == null || reqCat.getToken().length() != 7) {
@@ -358,7 +367,7 @@ public class GerenciadorDeUsuarios {
 	    // Atualiza a lista de categorias lendo o arquivo Categorias.json
 	    ArrayList<CategoriaDeAvisos> listaCategorias;
 	    try (FileReader reader = new FileReader(arquivo_categorias)) {
-	        Type listType = new TypeToken<ArrayList<CategoriaDeAvisos>>(){}.getType();
+	        java.lang.reflect.Type listType = new com.google.gson.reflect.TypeToken<ArrayList<CategoriaDeAvisos>>(){}.getType();
 	        listaCategorias = gson.fromJson(reader, listType);
 	        if (listaCategorias == null) {
 	            listaCategorias = new ArrayList<>();
@@ -368,22 +377,34 @@ public class GerenciadorDeUsuarios {
 	        return new Mensagem("235", "Unknown Error", null).Padroniza();
 	    }
 	    
-	    // Converte a string JSON de ids em um array de strings
-	    ArrayList<String> idsParaExcluir = gson.fromJson(reqCat.getIDs(), new TypeToken<ArrayList<String>>(){}.getType());
-
-	    // Verifica se as categorias existem antes de removê-las
-	    boolean categoriaEncontrada = false;
+	    // Obtém a lista de IDs para exclusão a partir da requisição
+	    ArrayList<String> idsParaExcluir = reqCat.getIDs();
+	    if (idsParaExcluir == null || idsParaExcluir.isEmpty()) {
+	        return new Mensagem("233", "No IDs provided", null).Padroniza();
+	    }
+	    
+	    // Verifica se todas as categorias informadas existem
 	    for (String id : idsParaExcluir) {
-	        boolean categoriaExistente = listaCategorias.stream().anyMatch(cat -> cat.id.equals(id));
-	        if (categoriaExistente) {
-	            categoriaEncontrada = true;
-	        } else {
-	            return new Mensagem("233", "invalid information inserted", null).Padroniza();
+	        boolean existe = false;
+	        for (CategoriaDeAvisos cat : listaCategorias) {
+	            if (cat.id != null && cat.id.equals(id)) {
+	                existe = true;
+	                break;
+	            }
+	        }
+	        if (!existe) {
+	            return new Mensagem("233", "Invalid information inserted: category id " + id + " does not exist", null).Padroniza();
 	        }
 	    }
 	    
-	    // Remove as categorias com os ids fornecidos
-	    listaCategorias.removeIf(cat -> idsParaExcluir.contains(cat.id));
+	    // Remove as categorias correspondentes aos IDs fornecidos e conta quantas foram removidas
+	    int removidas = 0;
+	    for (String id : idsParaExcluir) {
+	        // O método removeIf retorna true se pelo menos um elemento for removido
+	        if (listaCategorias.removeIf(cat -> cat.id.equals(id))) {
+	            removidas++;
+	        }
+	    }
 	    
 	    // Reescreve o arquivo Categorias.json com a lista atualizada
 	    try (FileWriter writer = new FileWriter(arquivo_categorias)) {
@@ -394,8 +415,9 @@ public class GerenciadorDeUsuarios {
 	        return new Mensagem("235", "Unknown Error", null).Padroniza();
 	    }
 	    
-	    return new Mensagem("230", "Successful category deletion", null).Padroniza();
+	    return new Mensagem("230", "Successful category deletion", "Categorias removidas: " + removidas).Padroniza();
 	}
+
 
 
 	public String lerCategoriasAviso(String string_json) {
@@ -431,7 +453,7 @@ public class GerenciadorDeUsuarios {
 	public String atualizaCategoria(String string_json) {
 	    String arquivo_categorias = "categorias.json";
 	    
-	    // Converte a string para o objeto RequisicaoCategoria
+	    // Converte a string para o objeto Requisicao
 	    Requisicao reqCat = gson.fromJson(string_json, Requisicao.class);
 	    
 	    // Valida o token (supondo que o token deva ter 7 caracteres)
@@ -439,20 +461,23 @@ public class GerenciadorDeUsuarios {
 	        return new Mensagem("222", "Invalid token", null).Padroniza();
 	    }
 	    
-	    // Cria a classe categoria 
-	    ArrayList<CategoriaDeAvisos> categoriaAtualizada = reqCat.getCategories();
-	    
-	    //FAZER loop para todos os for
-	    
-	    // Valida os campos obrigatórios da categoria
-	    if (categoriaAtualizada.id == null || categoriaAtualizada.name == null) {
-	        return new Mensagem("221", "Missing fields", null).Padroniza();
+	    // Obtém o vetor de categorias a serem atualizadas
+	    ArrayList<CategoriaDeAvisos> categoriasAtualizadas = reqCat.getCategories();
+	    if (categoriasAtualizadas == null || categoriasAtualizadas.isEmpty()) {
+	        return new Mensagem("221", "No categories provided", null).Padroniza();
 	    }
 	    
-	    // Atualiza a lista de categorias lendo o arquivo Categorias.json
+	    // Valida os campos obrigatórios de cada categoria (aqui, 'id' e 'name' são obrigatórios)
+	    for (CategoriaDeAvisos catAtualizada : categoriasAtualizadas) {
+	        if (catAtualizada.id == null || catAtualizada.name == null || catAtualizada.name.trim().isEmpty()) {
+	            return new Mensagem("221", "Missing fields in one or more categories", null).Padroniza();
+	        }
+	    }
+	    
+	    // Lê o arquivo "categorias.json" para obter a lista de categorias já cadastradas
 	    ArrayList<CategoriaDeAvisos> listaCategorias;
 	    try (FileReader reader = new FileReader(arquivo_categorias)) {
-	        Type listType = new TypeToken<ArrayList<CategoriaDeAvisos>>(){}.getType();
+	        java.lang.reflect.Type listType = new com.google.gson.reflect.TypeToken<ArrayList<CategoriaDeAvisos>>(){}.getType();
 	        listaCategorias = gson.fromJson(reader, listType);
 	        if (listaCategorias == null) {
 	            listaCategorias = new ArrayList<>();
@@ -462,25 +487,25 @@ public class GerenciadorDeUsuarios {
 	        return new Mensagem("224", "Unknown Error", null).Padroniza();
 	    }
 	    
-	    // Verifica se já existe uma categoria com o mesmo id
-	    boolean categoriaEncontrada = false;
-	    for (CategoriaDeAvisos cat : listaCategorias) {
-	    	
-	    	System.out.println(cat.id);
-	        if (cat.id.equals(categoriaAtualizada.id)) {
-	            // Atualiza os valores da categoria encontrada
-	            cat.name = categoriaAtualizada.name;
-	            cat.description = categoriaAtualizada.description;
-	            categoriaEncontrada = true;
-	            break;
+	    // Atualiza cada categoria presente na requisição na lista de categorias
+	    int atualizadas = 0;
+	    for (CategoriaDeAvisos catAtualizada : categoriasAtualizadas) {
+	        boolean encontrada = false;
+	        for (CategoriaDeAvisos cat : listaCategorias) {
+	            if (cat.id.equals(catAtualizada.id)) {
+	                // Atualiza os valores da categoria
+	                cat.name = catAtualizada.name;
+	                cat.description = catAtualizada.description;
+	                encontrada = true;
+	                atualizadas++;
+	                break;
+	            }
 	        }
+	        // Se a categoria não for encontrada, pode-se optar por ignorar ou adicionar como nova.
+	        // Aqui optamos por ignorar.
 	    }
 	    
-	    if (!categoriaEncontrada) {
-	        return new Mensagem("226", "Categoria not found", null).Padroniza();
-	    }
-	    
-	    // Reescreve o arquivo Categorias.json com a lista atualizada
+	    // Reescreve o arquivo "categorias.json" com a lista atualizada
 	    try (FileWriter writer = new FileWriter(arquivo_categorias)) {
 	        gson.toJson(listaCategorias, writer);
 	        writer.flush();
@@ -489,8 +514,10 @@ public class GerenciadorDeUsuarios {
 	        return new Mensagem("224", "Unknown Error", null).Padroniza();
 	    }
 	    
-	    return new Mensagem("220", "Successful category update", categoriaAtualizada.id).Padroniza();
+	    return new Mensagem("220", "Successful category update", "Categorias atualizadas: " + atualizadas).Padroniza();
 	}
+
+
 
 	public String excluiUsuario(String usuarioASerDeletado_str) {
 	    // Cria a requisição a partir do JSON recebido

@@ -14,7 +14,7 @@ public class Requisicao {
 	
 	//para recados
 	private ArrayList<CategoriaDeAvisos> categories = null;
-	private String ids = null;	//Guarda os ids dos recedos a deletar
+	private ArrayList<String> ids = null;	//Guarda os ids dos recedos a deletar
 	
 	//construtor para recados 	(criar)
 	public Requisicao(String opcao, String name, String description, String token)
@@ -48,10 +48,7 @@ public class Requisicao {
 	public Requisicao(String opcao, String token, ArrayList<String> IDs) {
 	    this.op = opcao;
 	    this.token = token;
-	    
-	    // Converte a lista de IDs em uma string JSON
-	    Gson gson = new Gson();
-	    this.ids = gson.toJson(IDs);
+	    this.ids = IDs;
 	}
 	
 	
@@ -64,11 +61,11 @@ public class Requisicao {
 		this.categories = categories;
 	}
 
-	public String getIDs() {
+	public ArrayList<String> getIDs() {
 		return ids;
 	}
 
-	public void setIDs(String iDs) {
+	public void setIDs(ArrayList<String> iDs) {
 		this.ids = iDs;
 	}
 
@@ -86,16 +83,15 @@ public class Requisicao {
 		this.op = opcao;
 		this.token = token;
 	}
-	
-	
+
 	public Requisicao(String opcao, String user, String token) {	//para exclusão e  leitura
 		super();
 		this.op = opcao;
 		this.user = user;
 		this.token = token;
 	}
-	
-	
+
+
 	public String Padroniza() 
 	{
 		Gson gson = new Gson();

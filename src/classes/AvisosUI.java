@@ -75,7 +75,7 @@ public class AvisosUI extends JFrame {
                 // Cria a requisição para criação de categoria (op "7")
                 // Supondo que o construtor da Requisicao para op "7" seja: 
                 // Requisicao(String op, String nome, String descricao, String token)
-                Requisicao req = new Requisicao("7", nome, descricao, token);
+                Requisicao req = new Requisicao("7", nome, descricao, token); 
                 
                 // Envia a requisição para o servidor
                 try {

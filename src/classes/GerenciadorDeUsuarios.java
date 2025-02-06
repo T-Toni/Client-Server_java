@@ -348,7 +348,7 @@ public class GerenciadorDeUsuarios {
 	        return new Mensagem("203", "Unknown Error", null).Padroniza();
 	    }
 	    
-	    return new Mensagem("200", "Successful category creation", "Categorias adicionadas: " + novasCategorias.size()).Padroniza();
+	    return new Mensagem("200", "Successful category creation").Padroniza();
 	}
 
 
@@ -415,7 +415,7 @@ public class GerenciadorDeUsuarios {
 	        return new Mensagem("235", "Unknown Error", null).Padroniza();
 	    }
 	    
-	    return new Mensagem("230", "Successful category deletion", "Categorias removidas: " + removidas).Padroniza();
+	    return new Mensagem("230", "Successful category deletion").Padroniza();
 	}
 
 
@@ -514,7 +514,7 @@ public class GerenciadorDeUsuarios {
 	        return new Mensagem("224", "Unknown Error", null).Padroniza();
 	    }
 	    
-	    return new Mensagem("220", "Successful category update", "Categorias atualizadas: " + atualizadas).Padroniza();
+	    return new Mensagem("220", "Successful category update").Padroniza();
 	}
 
 
@@ -534,7 +534,7 @@ public class GerenciadorDeUsuarios {
 	    // Determina qual usuário será deletado
 	    String usuarioASerDeletado_user;
 	    
-	    if (!requisicao.getToken().equals(requisicao.getUser())) { 
+	    if (!requisicao.getToken().equals(requisicao.getUser()) && requisicao.getUser() != null && !requisicao.getUser().equals("")){ 
 	        // Caso o usuário esteja tentando deletar outra conta
 	        if (!isAdmin) {
 	            return new Mensagem("133", "Invalid Permission, User does not have permission to delete account", null).Padroniza();

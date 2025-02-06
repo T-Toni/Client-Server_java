@@ -13,8 +13,8 @@ public class Requisicao {
 	private String password;
 	
 	//para recados
-	private ArrayList<CategoriaDeAvisos> categories = null;
-	private ArrayList<String> ids = null;	//Guarda os ids dos recedos a deletar
+	private ArrayList<CategoriaDeAvisos> categories = new ArrayList<CategoriaDeAvisos>();
+	private ArrayList<String> ids = new ArrayList<String>();	//Guarda os ids dos recedos a deletar
 	
 	//construtor para recados 	(criar)
 	public Requisicao(String opcao, String name, String description, String token)

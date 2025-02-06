@@ -99,17 +99,17 @@ public class ClienteLogado {
             @Override
             public void actionPerformed(ActionEvent e) {
                 String userAlvo = JOptionPane.showInputDialog(janela, "Digite o user do usuário a consultar:");
-                if (userAlvo != null && !userAlvo.trim().isEmpty()) {
-                    // Cria a requisição para consulta (op "2")
-                    // token indica o usuário logado; o campo "user" é o alvo da consulta
-                    Requisicao req = new Requisicao("2", userAlvo, token);	
-                    String jsonRequest = req.Padroniza();
-                    try {
-                        EnviaMensagem(jsonRequest);
-                    } catch (IOException ex) {
-                        ex.printStackTrace();
-                    }
+                //if (userAlvo != null && !userAlvo.trim().isEmpty()) {
+                // Cria a requisição para consulta (op "2")
+                // token indica o usuário logado; o campo "user" é o alvo da consulta
+                Requisicao req = new Requisicao("2", userAlvo, token);	
+                String jsonRequest = req.Padroniza();
+                try {
+                    EnviaMensagem(jsonRequest);
+                } catch (IOException ex) {
+                    ex.printStackTrace();
                 }
+                
             }
         });
 
@@ -144,16 +144,16 @@ public class ClienteLogado {
             @Override
             public void actionPerformed(ActionEvent e) {
                 String userAlvo = JOptionPane.showInputDialog(janela, "Digite o user do usuário a excluir:");
-                if (userAlvo != null && !userAlvo.trim().isEmpty()) {
-                    // Cria a requisição de exclusão (op "4")
-                    Requisicao req = new Requisicao("4", userAlvo, token);
-                    String jsonRequest = req.Padroniza();
-                    try {
-                        EnviaMensagem(jsonRequest);
-                    } catch (IOException ex) {
-                        ex.printStackTrace();
-                    }
+                //if (userAlvo != null && !userAlvo.trim().isEmpty()) {
+                // Cria a requisição de exclusão (op "4")
+                Requisicao req = new Requisicao("4", userAlvo, token);
+                String jsonRequest = req.Padroniza();
+                try {
+                    EnviaMensagem(jsonRequest);
+                } catch (IOException ex) {
+                    ex.printStackTrace();
                 }
+            
             }
         });
         

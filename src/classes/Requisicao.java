@@ -14,7 +14,7 @@ public class Requisicao {
 	
 	//para recados
 	private ArrayList<CategoriaDeAvisos> categories = new ArrayList<CategoriaDeAvisos>();
-	private ArrayList<String> ids = new ArrayList<String>();	//Guarda os ids dos recedos a deletar
+	private ArrayList<String> categoryIds = new ArrayList<String>();	//Guarda os ids dos recedos a deletar
 	
 	//construtor para recados 	(criar)
 	public Requisicao(String opcao, String name, String description, String token)
@@ -48,13 +48,14 @@ public class Requisicao {
 	public Requisicao(String opcao, String token, ArrayList<String> IDs) {
 	    this.op = opcao;
 	    this.token = token;
-	    this.ids = IDs;
+	    this.categoryIds = IDs;
 	}
 	
 	
 	public ArrayList<CategoriaDeAvisos> getCategories() {		//ja vem padronizado
 		return categories;
 	}
+		
 	
 
 	public void setCategories(ArrayList<CategoriaDeAvisos> categories) {
@@ -62,11 +63,11 @@ public class Requisicao {
 	}
 
 	public ArrayList<String> getIDs() {
-		return ids;
+		return categoryIds;
 	}
 
 	public void setIDs(ArrayList<String> iDs) {
-		this.ids = iDs;
+		this.categoryIds = iDs;
 	}
 
 	public Requisicao(String opcao, String nome, String usuario, String senha, String token) {
@@ -138,4 +139,5 @@ public class Requisicao {
 	public void setPassword(String password) {
 		this.password = password;
 	}
+
 }

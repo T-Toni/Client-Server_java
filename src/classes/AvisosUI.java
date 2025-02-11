@@ -140,7 +140,7 @@ public class AvisosUI extends JFrame {
                     }
                 }
                 // Cria a requisição de exclusão (op "10")
-                // Supondo que o construtor seja: Requisicao(String op, String token, ArrayList<String> ids)
+                
                 Requisicao req = new Requisicao("10", token, ids);
                 
                 // Envia a requisição para o servidor

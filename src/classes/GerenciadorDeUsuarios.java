@@ -290,7 +290,7 @@ public class GerenciadorDeUsuarios {
 	    }
 	    
 	    // Obtém o vetor de categorias enviado na requisição
-	    ArrayList<CategoriaDeAvisos> novasCategorias = reqCat.getCategories();
+	    ArrayList<CategoriaDeAvisos> novasCategorias = reqCat.getCategories();  
 	    if (novasCategorias == null || novasCategorias.isEmpty()) {
 	        return new Mensagem("208", "Nenhuma categoria informada", null).Padroniza();
 	    }

@@ -102,7 +102,7 @@ public class ClienteLogado {
                 //if (userAlvo != null && !userAlvo.trim().isEmpty()) {
                 // Cria a requisição para consulta (op "2")
                 // token indica o usuário logado; o campo "user" é o alvo da consulta
-                Requisicao req = new Requisicao("2", userAlvo, token);	
+                Requisicao req = new Requisicao("2", userAlvo, token);	 
                 String jsonRequest = req.Padroniza();
                 try {
                     EnviaMensagem(jsonRequest);

@@ -269,13 +269,41 @@ public class GerenciadorDeUsuarios {
         	else
         		return new Mensagem("235", "Unknown Error", null).Padroniza();
         }
+        else if(op.equals("11"))	//create
+        {
+        	if (isAdmin)
+        		return cadastraAviso(requisicao.Padroniza());
+        	else
+        		return new Mensagem("302", "Invalid token", null).Padroniza();
+        }
+        else if(op.equals("12"))	//read
+        {
+        	if (isAdmin)
+        		return cadastraAviso(requisicao.Padroniza());
+        	else
+        		return new Mensagem("302", "Invalid token", null).Padroniza();
+        }
+        else if(op.equals("13"))	//update
+        {
+        	if (isAdmin)
+        		return atualizaAviso(requisicao.Padroniza());
+        	else
+        		return new Mensagem("332", "Invalid token", null).Padroniza();
+        }
+        else if(op.equals("14"))	//delete
+        {
+        	if (isAdmin)
+        		return excluiAviso(requisicao.Padroniza());
+        	else
+        		return new Mensagem("332", "Invalid token", null).Padroniza();
+        }
         
 
         return mensagem.Padroniza();	
 	}
 
 	
-	//AVISOS
+	//CATEGORIAS
 	
 	//create
 	public String cadastraCategoriaAviso(String string_json) {
@@ -350,8 +378,6 @@ public class GerenciadorDeUsuarios {
 	    
 	    return new Mensagem("200", "Successful category creation").Padroniza();
 	}
-
-
 	
 	public String excluiCategoria(String string_json) {
 	    String arquivo_categorias = "categorias.json";
@@ -417,8 +443,6 @@ public class GerenciadorDeUsuarios {
 	    
 	    return new Mensagem("230", "Successful category deletion").Padroniza();
 	}
-
-
 
 	public String lerCategoriasAviso(String string_json) {
 	    String arquivo_categorias = "categorias.json";
@@ -517,8 +541,8 @@ public class GerenciadorDeUsuarios {
 	    return new Mensagem("220", "Successful category update").Padroniza();
 	}
 
-
-
+	//USUARIOS
+	
 	public String excluiUsuario(String usuarioASerDeletado_str) {
 	    // Cria a requisição a partir do JSON recebido
 		
@@ -567,7 +591,6 @@ public class GerenciadorDeUsuarios {
 	    return new Mensagem("130", "Account successfully deleted", null).Padroniza();
 	}
 
-
 	public String consultaUsuario(String string_json) {
 	    // Cria a requisição a partir do JSON recebido
 	    Requisicao usuario = gson.fromJson(string_json, Requisicao.class);
@@ -605,7 +628,6 @@ public class GerenciadorDeUsuarios {
 	        ? new Mensagem("114", "User not found", null).Padroniza()
 	        : new Mensagem("115", "Unknown Error", null).Padroniza();
 	}
-
 
 	public String atualizaUsuario(String string_json) {
 	    // Cria a requisição a partir do JSON recebido
@@ -656,5 +678,253 @@ public class GerenciadorDeUsuarios {
 	        : new Mensagem("124", "Unknown error").Padroniza();
 	}
 
+	//AVISOS
+	
+	public String cadastraAviso(String string_json) {
+	    String arquivo_avisos = "avisos.json";
+	    String arquivo_categorias = "categorias.json";
+	    
+	    // Converte a string JSON para um objeto auxiliar RequisicaoAviso
+	    Requisicao reqAviso = gson.fromJson(string_json, Requisicao.class);
+	    
+	    // Valida o token (deve ter 7 caracteres)
+	    if (reqAviso.getToken() == null || reqAviso.getToken().length() != 7) {
+	        return new Mensagem("302", "Invalid token", null).Padroniza();
+	    }
+	    
+	    // Valida os campos obrigatórios do aviso
+	    if (reqAviso.title == null || reqAviso.title.trim().isEmpty() ||
+	        reqAviso.text == null || reqAviso.text.trim().isEmpty() ||
+	        reqAviso.categoryId == null || reqAviso.categoryId.trim().isEmpty()) {
+	        return new Mensagem("303", "Unknown error", null).Padroniza();
+	    }
+	    
+	    // Lê o arquivo "categorias.json" para verificar se o categoryId informado existe
+	    ArrayList<CategoriaDeAvisos> listaCategorias;
+	    try (FileReader reader = new FileReader(arquivo_categorias)) {
+	        java.lang.reflect.Type listType = new com.google.gson.reflect.TypeToken<ArrayList<CategoriaDeAvisos>>(){}.getType();
+	        listaCategorias = gson.fromJson(reader, listType);
+	        if (listaCategorias == null) {
+	            return new Mensagem("303", "Unknown error", null).Padroniza();
+	        }
+	    } catch (IOException e) {
+	        e.printStackTrace();
+	        return new Mensagem("303", "Unknown error", null).Padroniza();
+	    }
+	    
+	    boolean categoriaExists = false;
+	    for (CategoriaDeAvisos cat : listaCategorias) {
+	        if (cat.id != null && cat.id.equals(reqAviso.categoryId)) {
+	            categoriaExists = true;
+	            break;
+	        }
+	    }
+	    if (!categoriaExists) {
+	        return new Mensagem("303", "Unknown error", null).Padroniza();
+	    }
+	    
+	    // Cria o novo aviso usando o construtor da classe Aviso
+	    Aviso novoAviso = new Aviso(reqAviso.title, reqAviso.text, reqAviso.categoryId);
+	    
+	    // Lê a lista atual de avisos do arquivo "avisos.json"
+	    ArrayList<Aviso> listaAvisos;
+	    try (FileReader reader = new FileReader(arquivo_avisos)) {
+	        java.lang.reflect.Type listType = new com.google.gson.reflect.TypeToken<ArrayList<Aviso>>(){}.getType();
+	        listaAvisos = gson.fromJson(reader, listType);
+	        if (listaAvisos == null) {
+	            listaAvisos = new ArrayList<>();
+	        }
+	    } catch (IOException e) {
+	        // Se o arquivo não existir, inicia uma nova lista
+	        listaAvisos = new ArrayList<>();
+	    }
+	    
+	    // Determina o próximo id sequencial para o aviso
+	    int novoId = 1;
+	    if (!listaAvisos.isEmpty()) {
+	        int maiorId = listaAvisos.stream()
+	            .mapToInt(a -> {
+	                try {
+	                    return Integer.parseInt(a.id);
+	                } catch (NumberFormatException ex) {
+	                    return 0;
+	                }
+	            })
+	            .max()
+	            .orElse(0);
+	        novoId = maiorId + 1;
+	    }
+	    novoAviso.id = String.valueOf(novoId);
+	    
+	    // Adiciona o novo aviso à lista e regrava o arquivo "avisos.json"
+	    listaAvisos.add(novoAviso);
+	    try (FileWriter writer = new FileWriter(arquivo_avisos)) {
+	        gson.toJson(listaAvisos, writer);
+	        writer.flush();
+	    } catch (IOException e) {
+	        e.printStackTrace();
+	        return new Mensagem("303", "Unknown error", null).Padroniza();
+	    }
+	    
+	    return new Mensagem("300", "Successful announcement creation", novoAviso.id).Padroniza();
+	}
 
+	public String atualizaAviso(String string_json) {
+	    String arquivo_avisos = "avisos.json";
+	    String arquivo_categorias = "categorias.json";
+	    
+	    // Converte a string JSON para um objeto Requisicao
+	    Requisicao req = gson.fromJson(string_json, Requisicao.class);
+	    
+	    // Valida o token (deve ter 7 caracteres)
+	    if (req.getToken() == null || req.getToken().length() != 7) {
+	        return new Mensagem("322", "Invalid token", null).Padroniza();
+	    }
+	    
+	    // Extraí o id do aviso da requisição usando Gson (pois Requisicao não possui campo "id")
+	    String idAviso = req.id;
+	    //System.out.println(idAviso);
+	    
+	    String novoTitle = req.title;
+	    String novoText = req.text;
+	    String novoCategoryId = req.categoryId;
+	    
+	    // Lê o arquivo "avisos.json" para obter a lista de avisos existentes
+	    ArrayList<Aviso> listaAvisos;
+	    try (FileReader reader = new FileReader(arquivo_avisos)) {
+	        java.lang.reflect.Type listType = new com.google.gson.reflect.TypeToken<ArrayList<Aviso>>(){}.getType();
+	        listaAvisos = gson.fromJson(reader, listType);
+	        if (listaAvisos == null) {
+	            return new Mensagem("323", "Announcement does not exist in database", null).Padroniza();
+	        }
+	    } catch (IOException e) {
+	        e.printStackTrace();
+	        return new Mensagem("324", "Unknown error", null).Padroniza();
+	    }
+	    
+	    // Procura o aviso com o ID informado
+	    Aviso avisoToUpdate = null;
+	    for (Aviso av : listaAvisos) {
+	        if (av.id != null && av.id.equals(idAviso)) {
+	            avisoToUpdate = av;
+	            break;
+	        }
+	    }
+	    
+	    if (avisoToUpdate == null) {
+	        return new Mensagem("323", "Announcement does not exist in database", null).Padroniza();
+	    }
+	    
+	    // Atualiza os campos, somente se os valores fornecidos não estiverem vazios
+	    if (novoTitle != null && !novoTitle.trim().isEmpty()) {
+	        avisoToUpdate.title = novoTitle;
+	    }
+	    if (novoText != null && !novoText.trim().isEmpty()) {
+	        avisoToUpdate.text = novoText;
+	    }
+	    if (novoCategoryId != null && !novoCategoryId.trim().isEmpty()) {
+	        // Verifica se a nova categoria existe no arquivo "categorias.json"
+	        ArrayList<CategoriaDeAvisos> listaCategorias;
+	        try (FileReader reader = new FileReader(arquivo_categorias)) {
+	            java.lang.reflect.Type listType = new com.google.gson.reflect.TypeToken<ArrayList<CategoriaDeAvisos>>(){}.getType();
+	            listaCategorias = gson.fromJson(reader, listType);
+	            if (listaCategorias == null) {
+	                return new Mensagem("323", "Invalid Information inserted2", null).Padroniza();
+	            }
+	        } catch (IOException e) {
+	            e.printStackTrace();
+	            return new Mensagem("324", "Unknown error", null).Padroniza();
+	        }
+	        
+	        boolean categoryExists = false;
+	        for (CategoriaDeAvisos cat : listaCategorias) {
+	            if (cat.id != null && cat.id.equals(novoCategoryId)) {
+	                categoryExists = true;
+	                break;
+	            }
+	        }
+	        if (!categoryExists) {
+	            return new Mensagem("323", "Invalid Information inserted3", null).Padroniza();
+	        }
+	        avisoToUpdate.categoryId = novoCategoryId;
+	    }
+	    
+	    System.out.println(avisoToUpdate.title);
+	    
+	    // Regrava o arquivo "avisos.json" com a lista atualizada
+	    try (FileWriter writer = new FileWriter(arquivo_avisos)) {
+	        gson.toJson(listaAvisos, writer);
+	        writer.flush();
+	    } catch (IOException e) {
+	        e.printStackTrace();
+	        return new Mensagem("324", "Unknown error", null).Padroniza();
+	    }
+	    
+	    return new Mensagem("320", "Successful announcement update", req.getToken()).Padroniza();
+	}
+
+	public String excluiAviso(String string_json) {
+	    String arquivo_avisos = "avisos.json";
+	    
+	    // Converte a string JSON para um objeto Requisicao
+	    Requisicao req = gson.fromJson(string_json, Requisicao.class);
+	    
+	    // Valida o token (deve ter 7 caracteres)
+	    if (req.getToken() == null || req.getToken().length() != 7) {
+	        return new Mensagem("332", "Invalid token", null).Padroniza();
+	    }
+	    
+	    // Extrai o id do aviso da requisição usando o JsonParser do Gson
+	    String idAviso;
+	    try {
+	        idAviso = req.getUser();
+	    } catch(Exception e) {
+	        return new Mensagem("331", "Missing fields", null).Padroniza();
+	    }
+	    
+	    // Lê o arquivo "avisos.json" para obter a lista de avisos existentes
+	    ArrayList<Aviso> listaAvisos;
+	    try (FileReader reader = new FileReader(arquivo_avisos)) {
+	        java.lang.reflect.Type listType = new com.google.gson.reflect.TypeToken<ArrayList<Aviso>>(){}.getType();
+	        listaAvisos = gson.fromJson(reader, listType);
+	        if (listaAvisos == null) {
+	            listaAvisos = new ArrayList<>();
+	        }
+	    } catch (IOException e) {
+	        e.printStackTrace();
+	        return new Mensagem("334", "Unknown error", null).Padroniza();
+	    }
+	    
+	    // Remove o aviso com o id correspondente
+	    boolean removido = false;
+	    
+	    for(int i = 0; i < listaAvisos.size(); i++)
+	    {
+	    	Aviso aviso = listaAvisos.get(i);
+	    	
+	    	if(aviso.id.equals(idAviso))
+	    	{
+	    		listaAvisos.remove(i);
+	    		i = listaAvisos.size();
+	    		removido = true;
+	    	}
+	    }
+	    
+	    if (!removido) {
+	        return new Mensagem("333", "Invalid information inserted", null).Padroniza();
+	    }
+	    
+	    // Reescreve o arquivo "avisos.json" com a lista atualizada
+	    try (FileWriter writer = new FileWriter(arquivo_avisos)) {
+	        gson.toJson(listaAvisos, writer);
+	        writer.flush();
+	    } catch (IOException e) {
+	        e.printStackTrace();
+	        return new Mensagem("334", "Unknown error", null).Padroniza();
+	    }
+	    
+	    return new Mensagem("330", "Successful announcement deletion", idAviso).Padroniza();
+	}
+
+	
 }

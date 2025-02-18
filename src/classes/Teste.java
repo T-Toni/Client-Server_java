@@ -75,15 +75,13 @@ public class Teste {
         
         //Requisicao req = new Requisicao("10", user2.user, new ArrayList<>(Arrays.asList("2", "3")));
         
-        //(String opcao, String id, String name, String description, String token, boolean ignore)
-        Requisicao req = new Requisicao("9", "4", "a", "a", user2.user, false);  
+        //(String opcao, String token,  String id, String titulo, String texto, String categoryId)
+        Requisicao req = new Requisicao("13", "2459574", "1", "aviso10000", "Este é o aviso 1000", "2");  
         
         String resposta3 = gerenciador.trataRequisicao(req.Padroniza());	
         
         System.out.println(resposta3);
         
-        
-        
-        
+
     }
 }

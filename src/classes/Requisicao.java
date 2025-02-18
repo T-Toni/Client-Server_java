@@ -12,9 +12,17 @@ public class Requisicao {
 	private String user;
 	private String password;
 	
-	//para recados
+	//para categorias
 	private ArrayList<CategoriaDeAvisos> categories = new ArrayList<CategoriaDeAvisos>();
 	private ArrayList<String> categoryIds = new ArrayList<String>();	//Guarda os ids dos recedos a deletar
+	
+	//para avisos
+	String id;
+	String title;
+	String text;
+	String categoryId;
+	
+	//CATEGORIAS DE AVISOS
 	
 	//construtor para recados 	(criar)
 	public Requisicao(String opcao, String name, String description, String token)
@@ -51,25 +59,6 @@ public class Requisicao {
 	    this.categoryIds = IDs;
 	}
 	
-	
-	public ArrayList<CategoriaDeAvisos> getCategories() {		//ja vem padronizado
-		return categories;
-	}
-		
-	
-
-	public void setCategories(ArrayList<CategoriaDeAvisos> categories) {
-		this.categories = categories;
-	}
-
-	public ArrayList<String> getIDs() {
-		return categoryIds;
-	}
-
-	public void setIDs(ArrayList<String> iDs) {
-		this.categoryIds = iDs;
-	}
-
 	public Requisicao(String opcao, String nome, String usuario, String senha, String token) {
 		super();
 		this.op = opcao;
@@ -85,11 +74,58 @@ public class Requisicao {
 		this.token = token;
 	}
 
-	public Requisicao(String opcao, String user, String token) {	//para exclusão e  leitura
+	
+	//AVISOS
+	
+	public Requisicao(String opcao, String user, String token) {	//para leitura
 		super();
 		this.op = opcao;
 		this.user = user;
 		this.token = token;
+	}
+	
+	public Requisicao(String opcao, String id, String token, int ignore) {	//para excluir E SE INSCREVER/SAIR DE UMA CATEGORIA DE AVISO
+		super();
+		this.op = opcao;
+		this.id = id;
+		this.token = token;
+	}
+
+	public Requisicao(String opcao, String token, String titulo, String texto, String categoryId, int ignore) {	//para criação de aviso
+		this.op = opcao;
+		this.token = token;
+		this.title = titulo;
+		this.text = texto;
+		this.categoryId = categoryId;
+	} 	
+
+	public Requisicao(String opcao, String token,  String id, String titulo, String texto, String categoryId) {	//para atualização de aviso
+		this.op = opcao;
+		this.token = token;
+		this.title = titulo;
+		this.text = texto;
+		this.id = id;
+		this.categoryId = categoryId;
+	} 	
+	
+	
+	
+	//Demais
+	
+	public ArrayList<CategoriaDeAvisos> getCategories() {		//ja vem padronizado
+		return categories;
+	}
+
+	public void setCategories(ArrayList<CategoriaDeAvisos> categories) {
+		this.categories = categories;
+	}
+
+	public ArrayList<String> getIDs() {
+		return categoryIds;
+	}
+
+	public void setIDs(ArrayList<String> iDs) {
+		this.categoryIds = iDs;
 	}
 
 

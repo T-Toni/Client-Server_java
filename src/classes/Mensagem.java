@@ -15,8 +15,22 @@ public class Mensagem {
 	String name = null;
 	//String nome = null;
 	
-	//para avisos
+	//para categorias
 	ArrayList<CategoriaDeAvisos>categories = null;
+	
+	//para avisos
+	ArrayList<Aviso> announcements;
+	
+	
+	public Mensagem(String tipo, String mensagem, ArrayList<Aviso> avisos, String token) 
+	{
+		super();
+		this.response = tipo;
+		this.message = mensagem;
+		this.announcements = avisos;
+		this.token = token;
+	}
+	
 	
 	public Mensagem(String tipo, String mensagem, String token) 
 	{

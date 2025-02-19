@@ -1,6 +1,7 @@
 package classes;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -279,7 +280,7 @@ public class GerenciadorDeUsuarios {
         else if(op.equals("12"))	//read
         {
         	if (isAdmin)
-        		return cadastraAviso(requisicao.Padroniza());
+        		return lerAvisos(requisicao.Padroniza());
         	else
         		return new Mensagem("302", "Invalid token", null).Padroniza();
         }
@@ -296,6 +297,14 @@ public class GerenciadorDeUsuarios {
         		return excluiAviso(requisicao.Padroniza());
         	else
         		return new Mensagem("332", "Invalid token", null).Padroniza();
+        }
+        else if(op.equals("15"))	//inscreve
+        {
+        	return inscreveCategoria(requisicao.Padroniza());
+        }
+        else if(op.equals("16"))	//desinscreve
+        {
+        	return desinscreveCategoria(requisicao.Padroniza());
         }
         
 
@@ -926,5 +935,269 @@ public class GerenciadorDeUsuarios {
 	    return new Mensagem("330", "Successful announcement deletion", idAviso).Padroniza();
 	}
 
+	public String lerAvisos(String string_json) {
+	    String arquivo_avisos = "avisos.json";
+	    String arquivo_usuarioCategorias = "usuarios-categorias.json";
+	    
+	    // Converte a string JSON para objeto Requisicao
+	    Requisicao req = gson.fromJson(string_json, Requisicao.class);
+	    
+	    // Valida o token (deve ter 7 caracteres)
+	    if (req.getToken() == null || req.getToken().length() != 7) {
+	        return new Mensagem("X12", "Invalid token", null, req.getToken()).Padroniza();
+	    }
+	    
+	    // O token também é usado como identificador do usuário inscrito
+	    String userId = req.getToken();
+	    
+	    // Lê o arquivo "usuarios-categorias.json" para obter a lista de inscrições
+	    ArrayList<UsuarioCategoria> listaSubs;
+	    try (FileReader reader = new FileReader(arquivo_usuarioCategorias)) {
+	        java.lang.reflect.Type listType = new com.google.gson.reflect.TypeToken<ArrayList<UsuarioCategoria>>(){}.getType();
+	        listaSubs = gson.fromJson(reader, listType);
+	        if (listaSubs == null) {
+	            listaSubs = new ArrayList<>();
+	        }
+	    } catch (IOException e) {
+	        e.printStackTrace();
+	        return new Mensagem("X13", "Unknown error", null, req.getToken()).Padroniza();
+	    }
+	    
+	    // Procura a inscrição referente ao usuário
+	    ArrayList<String> categoriasInscrito = null;
+	    for (UsuarioCategoria uc : listaSubs) {
+	        if (uc.user.equals(userId)) {
+	            categoriasInscrito = uc.ids;
+	            break;
+	        }
+	    }
+	    if (categoriasInscrito == null) {
+	        categoriasInscrito = new ArrayList<>();
+	    }
+	    
+	    // Lê o arquivo "avisos.json" para obter a lista de avisos
+	    ArrayList<Aviso> listaAvisos;
+	    try (FileReader reader = new FileReader(arquivo_avisos)) {
+	        java.lang.reflect.Type listType = new com.google.gson.reflect.TypeToken<ArrayList<Aviso>>(){}.getType();
+	        listaAvisos = gson.fromJson(reader, listType);
+	        if (listaAvisos == null) {
+	            listaAvisos = new ArrayList<>();
+	        }
+	    } catch (IOException e) {
+	        e.printStackTrace();
+	        return new Mensagem("X13", "Unknown error", null, req.getToken()).Padroniza();
+	    }
+	    
+	    // Filtra os avisos para manter somente os que pertencem às categorias em que o usuário está inscrito
+	    ArrayList<Aviso> avisosFiltrados = new ArrayList<>();
+	    for (Aviso av : listaAvisos) {
+	        if (categoriasInscrito.contains(av.categoryId)) {
+	            avisosFiltrados.add(av);
+	        }
+	    }
+	    
+	    // Cria e retorna a mensagem padronizada com o resultado
+	    return new Mensagem("310", "Successful announcement read", avisosFiltrados, req.getToken()).Padroniza();
+	}
+
 	
+	public String inscreveCategoria(String string_json) {
+	    String arquivo_usuarioCategorias = "usuarios-categorias.json";
+	    String arquivo_categorias = "categorias.json";
+	    
+	    // Converte a string para o objeto Requisicao
+	    Requisicao req = gson.fromJson(string_json, Requisicao.class);
+	    
+	    // Valida o token (deve ter 7 caracteres)
+	    if (req.getToken() == null || req.getToken().length() != 7) {
+	        return new Mensagem("342", "Invalid token", null).Padroniza();
+	    }
+	    
+	    // Extrai o categoryId (usado o campo "user" para o categoryId)
+	    String categoryId;
+	    try {
+	        categoryId = req.getUser();
+	    } catch(Exception e) {
+	        return new Mensagem("341", "Missing fields", null).Padroniza();
+	    }
+	    
+	    if (categoryId.trim().isEmpty()) {
+	        return new Mensagem("341", "Missing fields", null).Padroniza();
+	    }
+	    
+	    // Verifica se o categoryId existe no arquivo "categorias.json"
+	    ArrayList<CategoriaDeAvisos> listaCats;
+	    try (FileReader reader = new FileReader(arquivo_categorias)) {
+	        java.lang.reflect.Type listType = new com.google.gson.reflect.TypeToken<ArrayList<CategoriaDeAvisos>>(){}.getType();
+	        listaCats = gson.fromJson(reader, listType);
+	        if (listaCats == null || listaCats.isEmpty()) {
+	            return new Mensagem("343", "Invalid information inserted", null).Padroniza();
+	        }
+	    } catch (FileNotFoundException e) {
+	        return new Mensagem("343", "Invalid information inserted", null).Padroniza();
+	    } catch (IOException e) {
+	        e.printStackTrace();
+	        return new Mensagem("344", "Unknown error", null).Padroniza();
+	    }
+	    
+	    boolean categoryExists = false;
+	    for (CategoriaDeAvisos cat : listaCats) {
+	        if (cat.id != null && cat.id.equals(categoryId)) {
+	            categoryExists = true;
+	            break;
+	        }
+	    }
+	    if (!categoryExists) {
+	        return new Mensagem("343", "Invalid information inserted", null).Padroniza();
+	    }
+	    
+	    // Lê o arquivo "usuarios-categorias.json" para obter a lista atual de inscrições
+	    ArrayList<UsuarioCategoria> lista;
+	    try (FileReader reader = new FileReader(arquivo_usuarioCategorias)) {
+	        java.lang.reflect.Type listType = new com.google.gson.reflect.TypeToken<ArrayList<UsuarioCategoria>>(){}.getType();
+	        lista = gson.fromJson(reader, listType);
+	        if (lista == null) {
+	            lista = new ArrayList<>();
+	        }
+	    } catch (FileNotFoundException e) {
+	        // Se o arquivo não existir, cria uma nova lista
+	        lista = new ArrayList<>();
+	    } catch (IOException e) {
+	        e.printStackTrace();
+	        return new Mensagem("344", "Unknown error", null).Padroniza();
+	    }
+	    
+	    // Procura se já existe uma inscrição para este usuário
+	    boolean found = false;
+	    for (UsuarioCategoria uc : lista) {
+	        if (uc.user.equals(req.getToken())) {
+	            found = true;
+	            // Se o categoryId ainda não estiver inscrito, adiciona-o
+	            if (!uc.ids.contains(categoryId)) {
+	                uc.ids.add(categoryId);
+	            }
+	            break;
+	        }
+	    }
+	    
+	    // Se não existir inscrição para o usuário, cria uma nova entrada
+	    if (!found) {
+	        ArrayList<String> ids = new ArrayList<>();
+	        ids.add(categoryId);
+	        UsuarioCategoria novoUC = new UsuarioCategoria(req.getToken(), ids);
+	        lista.add(novoUC);
+	    }
+	    
+	    // Reescreve o arquivo "usuarios-categorias.json" com a lista atualizada
+	    try (FileWriter writer = new FileWriter(arquivo_usuarioCategorias)) {
+	        gson.toJson(lista, writer);
+	        writer.flush();
+	    } catch (IOException e) {
+	        e.printStackTrace();
+	        return new Mensagem("344", "Unknown error", null).Padroniza();
+	    }
+	    
+	    return new Mensagem("340", "Subscribed successfully", categoryId).Padroniza();
+	}
+
+	public String desinscreveCategoria(String string_json) {
+	    String arquivo_usuarioCategorias = "usuarios-categorias.json";
+	    String arquivo_categorias = "categorias.json";
+	    
+	    // Converte a string para o objeto Requisicao
+	    Requisicao req = gson.fromJson(string_json, Requisicao.class);
+	    
+	    // Valida o token (deve ter 7 caracteres)
+	    if (req.getToken() == null || req.getToken().length() != 7) {
+	        return new Mensagem("352", "Invalid token", null).Padroniza();
+	    }
+	    
+	    // Extrai o categoryId (usando o campo "user" para o categoryId)
+	    String categoryId;
+	    try {
+	        categoryId = req.getUser();
+	    } catch(Exception e) {
+	        return new Mensagem("351", "Missing fields", null).Padroniza();
+	    }
+	    
+	    if (categoryId.trim().isEmpty()) {
+	        return new Mensagem("351", "Missing fields", null).Padroniza();
+	    }
+	    
+	    // Verifica se o categoryId existe no arquivo "categorias.json"
+	    ArrayList<CategoriaDeAvisos> listaCats;
+	    try (FileReader reader = new FileReader(arquivo_categorias)) {
+	        java.lang.reflect.Type listType = new com.google.gson.reflect.TypeToken<ArrayList<CategoriaDeAvisos>>(){}.getType();
+	        listaCats = gson.fromJson(reader, listType);
+	        if (listaCats == null || listaCats.isEmpty()) {
+	        	return new Mensagem("353", "invalid information inserted", null).Padroniza();
+	        }
+	    } catch (FileNotFoundException e) {
+	    	return new Mensagem("353", "invalid information inserted", null).Padroniza();
+	    } catch (IOException e) {
+	        e.printStackTrace();
+	        return new Mensagem("354", "Unknown error", null).Padroniza();
+	    }
+	    
+	    boolean categoryExists = false;
+	    for (CategoriaDeAvisos cat : listaCats) {
+	        if (cat.id != null && cat.id.equals(categoryId)) {
+	            categoryExists = true;
+	            break;
+	        }
+	    }
+	    if (!categoryExists) {
+	    	return new Mensagem("353", "invalid information inserted", null).Padroniza();
+	    }
+	    
+	    // Lê o arquivo "usuarios-categorias.json" para obter a lista atual de inscrições
+	    ArrayList<UsuarioCategoria> lista;
+	    try (FileReader reader = new FileReader(arquivo_usuarioCategorias)) {
+	        java.lang.reflect.Type listType = new com.google.gson.reflect.TypeToken<ArrayList<UsuarioCategoria>>(){}.getType();
+	        lista = gson.fromJson(reader, listType);
+	        if (lista == null) {
+	            lista = new ArrayList<>();
+	        }
+	    } catch (FileNotFoundException e) {
+	    	return new Mensagem("354", "Unknown error", null).Padroniza();
+	    } catch (IOException e) {
+	        e.printStackTrace();
+	        return new Mensagem("354", "Unknown error", null).Padroniza();
+	    }
+	    
+	    // Procura a inscrição para o usuário e remove o categoryId
+	    boolean found = false;
+	    for (int i = 0; i < lista.size(); i++) {
+	        UsuarioCategoria uc = lista.get(i);
+	        if (uc.user.equals(req.getToken())) {
+	            if (uc.ids.contains(categoryId)) {
+	                uc.ids.remove(categoryId);
+	                found = true;
+	                // Se a lista de IDs ficar vazia, remove a entrada inteira
+	                if (uc.ids.isEmpty()) {
+	                    lista.remove(i);
+	                }
+	            } else {
+	                return new Mensagem("353", "invalid information inserted", null).Padroniza();
+	            }
+	            break;
+	        }
+	    }
+	    
+	    if (!found) {
+	        return new Mensagem("353", "invalid information inserted", null).Padroniza();
+	    }
+	    
+	    // Reescreve o arquivo "usuarios-categorias.json" com a lista atualizada
+	    try (FileWriter writer = new FileWriter(arquivo_usuarioCategorias)) {
+	        gson.toJson(lista, writer);
+	        writer.flush();
+	    } catch (IOException e) {
+	        e.printStackTrace();
+	        return new Mensagem("354", "Unknown error", null).Padroniza();
+	    }
+	    
+	    return new Mensagem("350", "unsubscribed successfully", categoryId).Padroniza();
+	}
+
 }

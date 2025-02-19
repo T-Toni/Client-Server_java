@@ -48,6 +48,16 @@ public class Cliente
 	    //trata
 	    Gson gson = new Gson();
 	    Mensagem retorno_json = gson.fromJson(retorno, Mensagem.class);
+	    
+	    //PEDE AVISOS
+	    Requisicao req = new Requisicao("12", token);
+	    
+	    out.println(req.Padroniza());
+	    
+	    String avisos = in.readLine();
+	    
+	    Mensagem avisos_json = gson.fromJson(retorno, Mensagem.class);
+	    
 	    if (retorno_json.response.equals("000") || retorno_json.response.equals("001"))
 	    {
 	    	//permite o login

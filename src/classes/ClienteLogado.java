@@ -59,7 +59,7 @@ public class ClienteLogado {
 
     /**
      * Cria a interface gráfica para o cliente logado, com botões para logout, consultar,
-     * atualizar e excluir usuário e, agora, para acessar a área de categorias de avisos.
+     * atualizar e excluir usuário, além de botões para acessar as telas de categorias e de avisos.
      */
     public IG Terminal(String nome) {
         // Cria objeto IG (supondo que IG seja uma subclasse de JFrame com um JTextArea público "area")
@@ -99,9 +99,8 @@ public class ClienteLogado {
             @Override
             public void actionPerformed(ActionEvent e) {
                 String userAlvo = JOptionPane.showInputDialog(janela, "Digite o user do usuário a consultar:");
-                //if (userAlvo != null && !userAlvo.trim().isEmpty()) {
                 // Cria a requisição para consulta (op "2")
-                // token indica o usuário logado; o campo "user" é o alvo da consulta
+                // token indica o usuário logado; o campo "user" é o alvo da consulta.
                 Requisicao req = new Requisicao("2", userAlvo, token);	 
                 String jsonRequest = req.Padroniza();
                 try {
@@ -109,7 +108,6 @@ public class ClienteLogado {
                 } catch (IOException ex) {
                     ex.printStackTrace();
                 }
-                
             }
         });
 
@@ -144,7 +142,6 @@ public class ClienteLogado {
             @Override
             public void actionPerformed(ActionEvent e) {
                 String userAlvo = JOptionPane.showInputDialog(janela, "Digite o user do usuário a excluir:");
-                //if (userAlvo != null && !userAlvo.trim().isEmpty()) {
                 // Cria a requisição de exclusão (op "4")
                 Requisicao req = new Requisicao("4", userAlvo, token);
                 String jsonRequest = req.Padroniza();
@@ -153,23 +150,52 @@ public class ClienteLogado {
                 } catch (IOException ex) {
                     ex.printStackTrace();
                 }
-            
             }
         });
         
-        // Botão para acessar a Área de Avisos (categorias de avisos)
+        // Botão para acessar a área de Categorias (anteriormente "Avisos")
+        JButton btnCategorias = new JButton("Categorias");
+        btnCategorias.setBounds(180, 300, 160, 25);
+        janela.add(btnCategorias);
+        btnCategorias.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                // Abre a tela de categorias de avisos
+                AvisosUI categorias = new AvisosUI(token, echoSocket, out, in, g);
+                categorias.setVisible(true);
+            }
+        });
+        
+        // Novo botão para acessar a área de Avisos (CRUD de avisos e inscrição/desinscrição)
         JButton btnAvisos = new JButton("Avisos");
-        btnAvisos.setBounds(180, 300, 160, 25);
+        btnAvisos.setBounds(10, 340, 160, 25);
         janela.add(btnAvisos);
         btnAvisos.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                // Abre a tela de categorias de avisos
-                AvisosUI avisos = new AvisosUI(token, echoSocket, out, in, g);
+                // Abre a tela de avisos (anúncios)
+                // Você deverá implementar a classe AvisosAdminUI com os controles para criar, atualizar, ler e excluir avisos
+                AvisosAdminUI avisos = new AvisosAdminUI(token, echoSocket, out, in, g);
                 avisos.setVisible(true);
             }
         });
-
+        
+        /*
+        // Botão para inscrição/desinscrição de categorias de avisos
+        JButton btnInscricao = new JButton("Inscrições");
+        btnInscricao.setBounds(180, 340, 160, 25);
+        janela.add(btnInscricao);
+        btnInscricao.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                // Abre a tela de inscrição/desinscrição de categorias para avisos
+                // Você deverá implementar a classe InscricaoCategoriaUI (ou similar) para tratar essas requisições
+                InscricaoCategoriaUI inscricoes = new InscricaoCategoriaUI(token, echoSocket, out, in, g);
+                inscricoes.setVisible(true);
+            }
+        });
+		*/
+		
         // Rótulo de informação na parte superior
         JLabel lblInfo = new JLabel("Cliente Logado: " + token);
         lblInfo.setBounds(10, 10, 300, 30);

@@ -44,6 +44,9 @@ public class GerenciadorDeUsuarios {
 					// Confere se é administrador ou usuário
 					if (item.adminstrador) {
 						Mensagem mensagem = new Mensagem("001", "Successful login", usuario.user);
+						
+						//deve retornar os avisos
+						
 						return mensagem.Padroniza();
 					} else {
 						Mensagem mensagem = new Mensagem("000", "Successful login", usuario.user);
@@ -175,8 +178,19 @@ public class GerenciadorDeUsuarios {
         // Atualiza a lista de usuários antes de verificar permissões
         atualizaLista();
         
+        
+        boolean isAdmin = false;
         //confere se o usuario é admin ou não
-		boolean isAdmin = listaUsuarios.stream().anyMatch(user -> user.user.equals(requisicao.getToken()) && user.adminstrador);
+        //concerta imprecisões
+        if(op.equals("11"))
+        {
+        	isAdmin = listaUsuarios.stream().anyMatch(user -> user.user.equals(requisicao.getName()) && user.adminstrador);
+        	System.out.println("token: " + requisicao.getName() + "idadmin: " + isAdmin);
+        }
+        else 
+        {
+			isAdmin = listaUsuarios.stream().anyMatch(user -> user.user.equals(requisicao.getToken()) && user.adminstrador);
+		}
         
         if(op.equals("1"))			//Create
         {
@@ -216,7 +230,6 @@ public class GerenciadorDeUsuarios {
         }
         else if(op.equals("4"))		//Delete
         {
-        	
         	//confere se o token está correto
         	if(requisicao.getToken().length() != 7 || requisicao.getToken() == null)
         	{
@@ -279,10 +292,7 @@ public class GerenciadorDeUsuarios {
         }
         else if(op.equals("12"))	//read
         {
-        	if (isAdmin)
-        		return lerAvisos(requisicao.Padroniza());
-        	else
-        		return new Mensagem("302", "Invalid token", null).Padroniza();
+        	return lerAvisos(requisicao.Padroniza());
         }
         else if(op.equals("13"))	//update
         {
@@ -390,6 +400,7 @@ public class GerenciadorDeUsuarios {
 	
 	public String excluiCategoria(String string_json) {
 	    String arquivo_categorias = "categorias.json";
+	    String arquivo_usuarioCategorias = "usuarios-categorias.json";
 	    
 	    // Converte a string para o objeto Requisicao
 	    Requisicao reqCat = gson.fromJson(string_json, Requisicao.class);
@@ -428,14 +439,38 @@ public class GerenciadorDeUsuarios {
 	            }
 	        }
 	        if (!existe) {
-	            return new Mensagem("233", "Invalid information inserted: category id " + id + " does not exist", null).Padroniza();
+	            return new Mensagem("235", "Unknown Error", null).Padroniza();
+	        }
+	    }
+	    
+	    // Verifica se alguma das categorias está em uso no arquivo "usuarios-categorias.json"
+	    ArrayList<UsuarioCategoria> listaSubs;
+	    try (FileReader reader = new FileReader(arquivo_usuarioCategorias)) {
+	        java.lang.reflect.Type listTypeSubs = new com.google.gson.reflect.TypeToken<ArrayList<UsuarioCategoria>>(){}.getType();
+	        listaSubs = gson.fromJson(reader, listTypeSubs);
+	        if (listaSubs == null) {
+	            listaSubs = new ArrayList<>();
+	        }
+	    } catch (FileNotFoundException e) {
+	        // Se o arquivo não existir, significa que não há inscrições, prossegue
+	        listaSubs = new ArrayList<>();
+	    } catch (IOException e) {
+	        e.printStackTrace();
+	        return new Mensagem("235", "Unknown Error", null).Padroniza();
+	    }
+	    
+	    // Para cada category id a ser excluída, verifica se algum usuário está inscrito nela
+	    for (String id : idsParaExcluir) {
+	        for (UsuarioCategoria uc : listaSubs) {
+	            if (uc.ids != null && uc.ids.contains(id)) {
+	                return new Mensagem("234", "Category in use", null).Padroniza();
+	            }
 	        }
 	    }
 	    
 	    // Remove as categorias correspondentes aos IDs fornecidos e conta quantas foram removidas
 	    int removidas = 0;
 	    for (String id : idsParaExcluir) {
-	        // O método removeIf retorna true se pelo menos um elemento for removido
 	        if (listaCategorias.removeIf(cat -> cat.id.equals(id))) {
 	            removidas++;
 	        }
@@ -450,7 +485,7 @@ public class GerenciadorDeUsuarios {
 	        return new Mensagem("235", "Unknown Error", null).Padroniza();
 	    }
 	    
-	    return new Mensagem("230", "Successful category deletion").Padroniza();
+	    return new Mensagem("230", "Successful category deletion", null).Padroniza();
 	}
 
 	public String lerCategoriasAviso(String string_json) {
@@ -697,14 +732,14 @@ public class GerenciadorDeUsuarios {
 	    Requisicao reqAviso = gson.fromJson(string_json, Requisicao.class);
 	    
 	    // Valida o token (deve ter 7 caracteres)
-	    if (reqAviso.getToken() == null || reqAviso.getToken().length() != 7) {
+	    if (reqAviso.getName() == null || reqAviso.getName().length() != 7) {	//token
 	        return new Mensagem("302", "Invalid token", null).Padroniza();
 	    }
 	    
 	    // Valida os campos obrigatórios do aviso
-	    if (reqAviso.title == null || reqAviso.title.trim().isEmpty() ||
-	        reqAviso.text == null || reqAviso.text.trim().isEmpty() ||
-	        reqAviso.categoryId == null || reqAviso.categoryId.trim().isEmpty()) {
+	    if (reqAviso.getUser() == null || reqAviso.getUser().trim().isEmpty() ||			//title
+	        reqAviso.getPassword() == null || reqAviso.getPassword().trim().isEmpty() ||	//text
+	        reqAviso.getToken() == null || reqAviso.getToken().trim().isEmpty()) {			//categoryId
 	        return new Mensagem("303", "Unknown error", null).Padroniza();
 	    }
 	    
@@ -714,26 +749,26 @@ public class GerenciadorDeUsuarios {
 	        java.lang.reflect.Type listType = new com.google.gson.reflect.TypeToken<ArrayList<CategoriaDeAvisos>>(){}.getType();
 	        listaCategorias = gson.fromJson(reader, listType);
 	        if (listaCategorias == null) {
-	            return new Mensagem("303", "Unknown error", null).Padroniza();
+	            return new Mensagem("303", "Unknown error1", null).Padroniza();
 	        }
 	    } catch (IOException e) {
 	        e.printStackTrace();
-	        return new Mensagem("303", "Unknown error", null).Padroniza();
+	        return new Mensagem("303", "Unknown error2", null).Padroniza();
 	    }
 	    
 	    boolean categoriaExists = false;
 	    for (CategoriaDeAvisos cat : listaCategorias) {
-	        if (cat.id != null && cat.id.equals(reqAviso.categoryId)) {
+	        if (cat.id != null && cat.id.equals(reqAviso.getToken())) {
 	            categoriaExists = true;
 	            break;
 	        }
 	    }
 	    if (!categoriaExists) {
-	        return new Mensagem("303", "Unknown error", null).Padroniza();
+	        return new Mensagem("303", "Unknown error3", null).Padroniza();
 	    }
 	    
 	    // Cria o novo aviso usando o construtor da classe Aviso
-	    Aviso novoAviso = new Aviso(reqAviso.title, reqAviso.text, reqAviso.categoryId);
+	    Aviso novoAviso = new Aviso(reqAviso.getUser(), reqAviso.getPassword(), reqAviso.getToken());
 	    
 	    // Lê a lista atual de avisos do arquivo "avisos.json"
 	    ArrayList<Aviso> listaAvisos;
@@ -772,7 +807,7 @@ public class GerenciadorDeUsuarios {
 	        writer.flush();
 	    } catch (IOException e) {
 	        e.printStackTrace();
-	        return new Mensagem("303", "Unknown error", null).Padroniza();
+	        return new Mensagem("303", "Unknown error4", null).Padroniza();
 	    }
 	    
 	    return new Mensagem("300", "Successful announcement creation", novoAviso.id).Padroniza();

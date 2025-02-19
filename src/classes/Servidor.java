@@ -24,6 +24,7 @@ public class Servidor
     	System.out.print(mensagem);
 
         //adiciona
+    	//janela.area.append("enviada: " + mensagem.toUpperCase() + "\n");
         janela.area.append(": " + mensagem.toUpperCase() + "\n");
     }
     

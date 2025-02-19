@@ -50,7 +50,8 @@ public class ClienteLogado {
         out.println(mensagem);
         String s = in.readLine();
         System.out.println("echo logado: " + s);
-        janela.area.append(s + "\n");
+        janela.area.append("enviada: " + mensagem + "\n");
+        janela.area.append("recebida: " + s + "\n");
 
         // Trata a mensagem retornada (caso haja um objeto que interprete o retorno)
         TrataRetorno T = new TrataRetorno(g);

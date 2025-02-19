@@ -92,6 +92,7 @@ public class EchoServer2 extends Thread
 
                  String mensagem = g.trataRequisicao(inputLine);
 
+                 ig.imprime(inputLine);
                  ig.imprime(mensagem);
 
                  System.out.println ("Server: " + mensagem);

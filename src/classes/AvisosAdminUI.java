@@ -21,7 +21,8 @@ public class AvisosAdminUI extends JFrame {
         out.println(mensagem);
         String s = in.readLine();
         System.out.println("echo logado: " + s);
-        areaAvisos.append(s + "\n");
+        areaAvisos.append("enviada: " + mensagem + "\n");
+        areaAvisos.append("recebida: " + s + "\n");
 
         // Trata a mensagem retornada (caso haja um objeto que interprete o retorno)
         TrataRetorno T = new TrataRetorno(g);
@@ -74,7 +75,14 @@ public class AvisosAdminUI extends JFrame {
                     JOptionPane.showMessageDialog(AvisosAdminUI.this, "Title, text e category ID são obrigatórios.");
                     return;
                 }
-                Requisicao req = new Requisicao("11", token, title, text, categoryId);
+                Requisicao req = new Requisicao();
+                
+                req.setOp("11");
+                req.setToken(token);
+                req.title = title;
+                req.text = text;
+                req.categoryId = categoryId;
+                
                 try {
                     EnviaMensagem(req.Padroniza());
                 } catch (IOException ex) {
@@ -119,7 +127,11 @@ public class AvisosAdminUI extends JFrame {
                     JOptionPane.showMessageDialog(AvisosAdminUI.this, "ID é obrigatório.");
                     return;
                 }
-                Requisicao req = new Requisicao("14", id, token);
+                Requisicao req = new Requisicao();
+                
+                req.setOp("14");
+                req.setToken(token);
+                req.id = id;
                 try {
                     EnviaMensagem(req.Padroniza());
                 } catch (IOException ex) {
@@ -153,8 +165,14 @@ public class AvisosAdminUI extends JFrame {
                 if (categoryId == null || categoryId.trim().isEmpty()) {
                     JOptionPane.showMessageDialog(AvisosAdminUI.this, "Category ID é obrigatório.");
                     return;
-                }
-                Requisicao req = new Requisicao("15", categoryId, token);
+                }                
+                Requisicao req = new Requisicao();
+                
+                req.setOp("15");
+                req.setToken(token);
+                req.categoryId = categoryId;
+                
+                
                 try {
                     EnviaMensagem(req.Padroniza());
                 } catch (IOException ex) {
@@ -174,7 +192,11 @@ public class AvisosAdminUI extends JFrame {
                     JOptionPane.showMessageDialog(AvisosAdminUI.this, "Category ID é obrigatório.");
                     return;
                 }
-                Requisicao req = new Requisicao("16", categoryId, token);
+                Requisicao req = new Requisicao();
+                
+                req.setOp("16");
+                req.setToken(token);
+                req.categoryId = categoryId;
                 try {
                     EnviaMensagem(req.Padroniza());
                 } catch (IOException ex) {

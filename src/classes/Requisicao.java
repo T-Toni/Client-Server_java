@@ -22,6 +22,12 @@ public class Requisicao {
 	String text;
 	String categoryId;
 	
+	//genérico
+	public Requisicao()
+	{
+		
+	}
+	
 	//CATEGORIAS DE AVISOS
 	
 	//construtor para recados 	(criar)

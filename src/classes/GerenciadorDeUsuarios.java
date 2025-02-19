@@ -182,15 +182,8 @@ public class GerenciadorDeUsuarios {
         boolean isAdmin = false;
         //confere se o usuario é admin ou não
         //concerta imprecisões
-        if(op.equals("11"))
-        {
-        	isAdmin = listaUsuarios.stream().anyMatch(user -> user.user.equals(requisicao.getName()) && user.adminstrador);
-        	System.out.println("token: " + requisicao.getName() + "idadmin: " + isAdmin);
-        }
-        else 
-        {
-			isAdmin = listaUsuarios.stream().anyMatch(user -> user.user.equals(requisicao.getToken()) && user.adminstrador);
-		}
+        
+		isAdmin = listaUsuarios.stream().anyMatch(user -> user.user.equals(requisicao.getToken()) && user.adminstrador);
         
         if(op.equals("1"))			//Create
         {
@@ -732,15 +725,15 @@ public class GerenciadorDeUsuarios {
 	    Requisicao reqAviso = gson.fromJson(string_json, Requisicao.class);
 	    
 	    // Valida o token (deve ter 7 caracteres)
-	    if (reqAviso.getName() == null || reqAviso.getName().length() != 7) {	//token
+	    if (reqAviso.getToken() == null || reqAviso.getToken().length() != 7) {	//token
 	        return new Mensagem("302", "Invalid token", null).Padroniza();
 	    }
 	    
 	    // Valida os campos obrigatórios do aviso
-	    if (reqAviso.getUser() == null || reqAviso.getUser().trim().isEmpty() ||			//title
-	        reqAviso.getPassword() == null || reqAviso.getPassword().trim().isEmpty() ||	//text
-	        reqAviso.getToken() == null || reqAviso.getToken().trim().isEmpty()) {			//categoryId
-	        return new Mensagem("303", "Unknown error", null).Padroniza();
+	    if (reqAviso.title == null || reqAviso.title.trim().isEmpty() ||				//title
+	        reqAviso.text == null || reqAviso.text.trim().isEmpty() ||					//text
+	        reqAviso.categoryId == null || reqAviso.categoryId.trim().isEmpty()) {			//categoryId
+	        return new Mensagem("303", "Unknown error5", null).Padroniza();
 	    }
 	    
 	    // Lê o arquivo "categorias.json" para verificar se o categoryId informado existe
@@ -758,7 +751,7 @@ public class GerenciadorDeUsuarios {
 	    
 	    boolean categoriaExists = false;
 	    for (CategoriaDeAvisos cat : listaCategorias) {
-	        if (cat.id != null && cat.id.equals(reqAviso.getToken())) {
+	        if (cat.id != null && cat.id.equals(reqAviso.categoryId)) {
 	            categoriaExists = true;
 	            break;
 	        }
@@ -768,7 +761,7 @@ public class GerenciadorDeUsuarios {
 	    }
 	    
 	    // Cria o novo aviso usando o construtor da classe Aviso
-	    Aviso novoAviso = new Aviso(reqAviso.getUser(), reqAviso.getPassword(), reqAviso.getToken());
+	    Aviso novoAviso = new Aviso(reqAviso.title, reqAviso.text, reqAviso.categoryId);
 	    
 	    // Lê a lista atual de avisos do arquivo "avisos.json"
 	    ArrayList<Aviso> listaAvisos;
@@ -921,7 +914,7 @@ public class GerenciadorDeUsuarios {
 	    // Extrai o id do aviso da requisição usando o JsonParser do Gson
 	    String idAviso;
 	    try {
-	        idAviso = req.getUser();
+	        idAviso = req.id;
 	    } catch(Exception e) {
 	        return new Mensagem("331", "Missing fields", null).Padroniza();
 	    }
@@ -1051,7 +1044,7 @@ public class GerenciadorDeUsuarios {
 	    // Extrai o categoryId (usado o campo "user" para o categoryId)
 	    String categoryId;
 	    try {
-	        categoryId = req.getUser();
+	        categoryId = req.categoryId;
 	    } catch(Exception e) {
 	        return new Mensagem("341", "Missing fields", null).Padroniza();
 	    }
@@ -1147,10 +1140,10 @@ public class GerenciadorDeUsuarios {
 	        return new Mensagem("352", "Invalid token", null).Padroniza();
 	    }
 	    
-	    // Extrai o categoryId (usando o campo "user" para o categoryId)
+	    // Extrai o categoryId
 	    String categoryId;
 	    try {
-	        categoryId = req.getUser();
+	        categoryId = req.categoryId;
 	    } catch(Exception e) {
 	        return new Mensagem("351", "Missing fields", null).Padroniza();
 	    }

@@ -76,7 +76,7 @@ public class Teste {
         //Requisicao req = new Requisicao("10", user2.user, new ArrayList<>(Arrays.asList("2", "3")));
         
         //(String opcao, String token,  String id, String titulo, String texto, String categoryId)
-        Requisicao req = new Requisicao("12", "2459574", "2459574");
+        Requisicao req = new Requisicao("11", "2459574", "testeee", "testiii", "2");
         
         String resposta3 = gerenciador.trataRequisicao(req.Padroniza());	
         

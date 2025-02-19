@@ -22,7 +22,8 @@ public class AvisosUI extends JFrame {
         String s = in.readLine();
         System.out.println("echo logado: " + s);
         // Se desejar, pode atualizar a área de texto localmente
-        areaAvisos.append(s + "\n");
+        areaAvisos.append("enviada: " + mensagem + "\n");
+        areaAvisos.append("recebida: " + s + "\n");
 
         // Trata a mensagem retornada (caso haja um objeto que interprete o retorno)
         TrataRetorno T = new TrataRetorno(g);

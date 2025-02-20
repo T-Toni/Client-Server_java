@@ -1125,7 +1125,7 @@ public class GerenciadorDeUsuarios {
 	        return new Mensagem("344", "Unknown error", null).Padroniza();
 	    }
 	    
-	    return new Mensagem("340", "Subscribed successfully", categoryId).Padroniza();
+	    return new Mensagem("340", "Subscribed successfully", req.getToken()).Padroniza();
 	}
 
 	public String desinscreveCategoria(String string_json) {
@@ -1225,7 +1225,7 @@ public class GerenciadorDeUsuarios {
 	        return new Mensagem("354", "Unknown error", null).Padroniza();
 	    }
 	    
-	    return new Mensagem("350", "unsubscribed successfully", categoryId).Padroniza();
+	    return new Mensagem("350", "unsubscribed successfully", req.getToken()).Padroniza();
 	}
 
 }

@@ -255,10 +255,7 @@ public class GerenciadorDeUsuarios {
         }
         else if(op.equals("8"))		//read
         {
-        	if (isAdmin)
-            	return lerCategoriasAviso(requisicao.Padroniza());
-        	else
-        		return new Mensagem("213", "Unknown Error", null).Padroniza();
+            return lerCategoriasAviso(requisicao.Padroniza());
 
         }
         else if(op.equals("9"))		//update
@@ -285,7 +282,7 @@ public class GerenciadorDeUsuarios {
         }
         else if(op.equals("12"))	//read
         {
-        	return lerAvisos(requisicao.Padroniza());
+        	return lerAvisos(requisicao.Padroniza(), isAdmin);
         }
         else if(op.equals("13"))	//update
         {
@@ -375,6 +372,7 @@ public class GerenciadorDeUsuarios {
 	    // Para cada nova categoria, atribui um novo ID e adiciona à lista
 	    for (CategoriaDeAvisos cat : novasCategorias) {
 	        cat.id = String.valueOf(novoId);
+	        cat.subscribed = "false";
 	        novoId++;
 	        listaCategorias.add(cat);
 	    }
@@ -792,6 +790,7 @@ public class GerenciadorDeUsuarios {
 	        novoId = maiorId + 1;
 	    }
 	    novoAviso.id = String.valueOf(novoId);
+	    novoAviso.date = "20/02/2025";
 	    
 	    // Adiciona o novo aviso à lista e regrava o arquivo "avisos.json"
 	    listaAvisos.add(novoAviso);
@@ -963,7 +962,7 @@ public class GerenciadorDeUsuarios {
 	    return new Mensagem("330", "Successful announcement deletion", idAviso).Padroniza();
 	}
 
-	public String lerAvisos(String string_json) {
+	public String lerAvisos(String string_json, boolean isAdmin) {
 	    String arquivo_avisos = "avisos.json";
 	    String arquivo_usuarioCategorias = "usuarios-categorias.json";
 	    
@@ -1016,6 +1015,8 @@ public class GerenciadorDeUsuarios {
 	        return new Mensagem("X13", "Unknown error", null, req.getToken()).Padroniza();
 	    }
 	    
+	    if(!isAdmin)
+	    {
 	    // Filtra os avisos para manter somente os que pertencem às categorias em que o usuário está inscrito
 	    ArrayList<Aviso> avisosFiltrados = new ArrayList<>();
 	    for (Aviso av : listaAvisos) {
@@ -1026,6 +1027,8 @@ public class GerenciadorDeUsuarios {
 	    
 	    // Cria e retorna a mensagem padronizada com o resultado
 	    return new Mensagem("310", "Successful announcement read", avisosFiltrados, req.getToken()).Padroniza();
+	    }
+	    return new Mensagem("310", "Successful announcement read", listaAvisos, req.getToken()).Padroniza();
 	}
 
 	

@@ -8,12 +8,14 @@ public class Aviso {
 	String text;
 	String categoryId;
 	String id;
+	String date;
 	
 	public Aviso(String title, String text, String categoryId) {
 		super();
 		this.title = title;
 		this.text = text;
 		this.categoryId = categoryId;
+		this.date = "20/02/2025";
 	}
 	
 	public String Padroniza() 
